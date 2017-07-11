@@ -6,11 +6,11 @@ import Expressions
 import MoreTrig
 simplify :: (Floating a, Eq a) => Expr a -> Expr a
 --Constant Simplication!
-simplify (Const a :+: Const b) = Const (a + b)
-simplify (Const a :*: Const b) = Const (a * b)
-simplify (Const a :-: Const b) = Const (a - b)
-simplify (Const a :/: Const b) = Const (a / b)
-simplify (Const a :^: Const b) = Const (a ** b)
+simplify (Const a :+: Const b) = Const $ a + b
+simplify (Const a :*: Const b) = Const $ a * b
+simplify (Const a :-: Const b) = Const $ a - b
+simplify (Const a :/: Const b) = Const $ a / b
+simplify (Const a :^: Const b) = Const $ a ** b
 simplify (Sqrt (Const a)) = Const (sqrt a)
 simplify (Exp (Const a))  = Const (exp a)
 simplify (Log (Const a))  = Const (log a)
@@ -78,7 +78,7 @@ simplify ( (a :*: b) :/: c)  | b == c = a -- only when a == b
                              | a == c = b
                              | otherwise = simplify (a :*: b) :/: simplify (b)
 simplify ( a :/: b :/: c)    | a == b = c
-                             | b == c = a   
+                             | b == c = a
 
 -- Some Rules!
 simplify (Const a :*: (Const b :*: expr)) = (Const $ a*b) :*: (simplify expr)
@@ -94,8 +94,8 @@ simplify (Exp (Log(a) :*: b))    = simplify a :^: simplify b
 -- Square Roots
 simplify (Sqrt (a :^: Const 2)) = Abs a
 simplify ((Sqrt a) :^: Const 2) = a
-simplify (Abs a :/: b) | a == b = Sign a 
-simplify (a :/: Sign b) | a == b = Sign a 
+simplify (Abs a :/: b) | a == b = Sign a
+simplify (a :/: Sign b) | a == b = Sign a
 --Trig Stuff
 simplify (a :/: Sin b) = simplify (a) :*: Csc (simplify b)
 simplify (a :/: Cos b) = simplify (a) :*: Sec (simplify b)

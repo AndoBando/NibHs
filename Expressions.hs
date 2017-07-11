@@ -7,7 +7,7 @@ infixr 7 :*:
 infixr 7 :/:
 infixl 8 :^:
 
-data Expr a = Var [Char]
+data Expr a = Var String
     | Const a
     | (Expr a) :+: (Expr a)
     | (Expr a) :-: (Expr a)
@@ -48,11 +48,11 @@ data Expr a = Var [Char]
 instance (Eq m,Num m) => Eq ( Expr m) where
     Const a == Const b = a == b
     Var a == Var b = a == b
-    Const a == Var b = False
-    Var a == Const b = False
-    Parens (a) == Parens (b) = a == b
-    Parens (a) == b = a == b
-    a == Parens (b) = a == b 
+    Const _ == Var _ = False
+    Var _ == Const _ = False
+    Parens a == Parens b = a == b
+    Parens b == a = a == b
+    a == Parens b = a == b
     Abs a == Abs b = (a == b) || (a == Const (-1) :*: b) || (Const (-1) :*: a == b)
     Exp a == Exp b = a == b
     Log a == Log b = a == b
@@ -84,99 +84,102 @@ instance (Eq m,Num m) => Eq ( Expr m) where
     Sign a == Sign b = a == b
     (a :+: b) == (c :+: d) = ((a == c) && (b == d)) || ((a == d) && (b == c))
     (a :*: b) == (c :*: d) = ((a == c) && (b == d)) || ((a == d) && (b == c))
-    (a :-: b) == (c :-: d) = ((a == c) && (b == d))
-    (a :/: b) == (c :/: d) = ((a == c) && (b == d))
-    (a :^: b) == (c :^: d) = ((a == c) && (b == d))
+    (a :-: b) == (c :-: d) = (a == c) && (b == d)
+    (a :/: b) == (c :/: d) = (a == c) && (b == d)
+    (a :^: b) == (c :^: d) = (a == c) && (b == d)
     _ == _ = False --Give Up!
 
 instance (Show m) => Show (Expr m) where
-    show ( Const a ) = show (a)
-    show ( Var a )   = id (a)
-    show (a :+: b)   = show (a) ++ " + " ++ show (b) 
-    show (a :*: b)   = show (a) ++ " * " ++ show (b) 
-    show (a :-: b)   = show (a) ++ " - " ++ show (b) 
-    show (a :/: b)   = show (a) ++ " / " ++ show (b) 
-    show (a :^: b)   = show (a) ++ " ^ " ++ show (b)
-    show ( Parens a) = "( " ++ show (a) ++ " )" 
-    show ( Abs a)    = "| " ++ show (a) ++ " |"
-    show ( Log a)    = "Log ( " ++ show (a) ++ " )" 
-    show ( Exp a)    = "e ^ ( " ++ show (a) ++ " )" 
-    show ( Sin a)    = "Sin ( " ++ show (a) ++ " )" 
-    show ( Cos a)    = "Cos ( " ++ show (a) ++ " )" 
-    show ( Tan a)    = "Tan ( " ++ show (a) ++ " )" 
-    show ( Sec a)    = "Sec ( " ++ show (a) ++ " )" 
-    show ( Csc a)    = "Csc ( " ++ show (a) ++ " )" 
-    show ( Cot a)    = "Cot ( " ++ show (a) ++ " )" 
-    show ( Asin a)   = "ASin ( " ++ show (a) ++ " )" 
-    show ( Acos a)   = "ACos ( " ++ show (a) ++ " )" 
-    show ( Atan a)   = "ATan ( " ++ show (a) ++ " )"
-    show ( Asec a)    = "ASec ( " ++ show (a) ++ " )" 
-    show ( Acsc a)    = "ACsc ( " ++ show (a) ++ " )" 
-    show ( Acot a)    = "ACot ( " ++ show (a) ++ " )"  
-    show ( Sinh a)   = "Sinh ( " ++ show (a) ++ " )"
-    show ( Cosh a)   = "Cosh ( " ++ show (a) ++ " )"
-    show ( Tanh a)   = "Tanh ( " ++ show (a) ++ " )"
-    show ( Sech a)    = "Sech ( " ++ show (a) ++ " )" 
-    show ( Csch a)    = "Csch ( " ++ show (a) ++ " )" 
-    show ( Coth a)    = "Coth ( " ++ show (a) ++ " )"  
-    show ( Asinh a)  = "ASinh ( " ++ show (a) ++ " )"
-    show ( Acosh a)  = "Acosh ( " ++ show (a) ++ " )" 
-    show ( Atanh a)  = "Atanh ( " ++ show (a) ++ " )"
-    show ( Asech a)    = "ASech ( " ++ show (a) ++ " )" 
-    show ( Acsch a)    = "ACsch ( " ++ show (a) ++ " )" 
-    show ( Acoth a)    = "ACoth ( " ++ show (a) ++ " )" 
-    show ( Sqrt a)   = "√( " ++ show (a) ++ " )"
-    show ( Sign a)   = "Sign (" ++ show (a) ++ " )"
+    show (Const a)   = show a
+    show (Var a)     = a
+    show (a :+: b)   = show a ++ " + " ++ show b
+    show (a :*: b)   = show a ++ " * " ++ show b
+    show (a :-: b)   = show a ++ " - " ++ show b
+    show (a :/: b)   = show a ++ " / " ++ show b
+    show (a :^: b)   = show a ++ " ^ " ++ show b
+    show ( Parens a) = "( " ++ show a ++ " )"
+    show ( Abs a)    = "| " ++ show a ++ " |"
+    show ( Log a)    = "Log ( " ++ show a ++ " )"
+    show ( Exp a)    = "e ^ ( " ++ show a ++ " )"
+    show ( Sin a)    = "Sin ( " ++ show a ++ " )"
+    show ( Cos a)    = "Cos ( " ++ show a ++ " )"
+    show ( Tan a)    = "Tan ( " ++ show a ++ " )"
+    show ( Sec a)    = "Sec ( " ++ show a ++ " )"
+    show ( Csc a)    = "Csc ( " ++ show a ++ " )"
+    show ( Cot a)    = "Cot ( " ++ show a ++ " )"
+    show ( Asin a)   = "ASin ( " ++ show a ++ " )"
+    show ( Acos a)   = "ACos ( " ++ show a ++ " )"
+    show ( Atan a)   = "ATan ( " ++ show a ++ " )"
+    show ( Asec a)    = "ASec ( " ++ show a ++ " )"
+    show ( Acsc a)    = "ACsc ( " ++ show a ++ " )"
+    show ( Acot a)    = "ACot ( " ++ show a ++ " )"
+    show ( Sinh a)   = "Sinh ( " ++ show a ++ " )"
+    show ( Cosh a)   = "Cosh ( " ++ show a ++ " )"
+    show ( Tanh a)   = "Tanh ( " ++ show a ++ " )"
+    show ( Sech a)    = "Sech ( " ++ show a ++ " )"
+    show ( Csch a)    = "Csch ( " ++ show a ++ " )"
+    show ( Coth a)    = "Coth ( " ++ show a ++ " )"
+    show ( Asinh a)  = "ASinh ( " ++ show a ++ " )"
+    show ( Acosh a)  = "Acosh ( " ++ show a ++ " )"
+    show ( Atanh a)  = "Atanh ( " ++ show a ++ " )"
+    show ( Asech a)    = "ASech ( " ++ show a ++ " )"
+    show ( Acsch a)    = "ACsch ( " ++ show a ++ " )"
+    show ( Acoth a)    = "ACoth ( " ++ show a ++ " )"
+    show ( Sqrt a)   = "√( " ++ show a ++ " )"
+    show ( Sign a)   = "Sign (" ++ show a ++ " )"
 
 instance (Num m, Eq m) => Num (Expr m) where
-    a + b = (a :+: b)
+    a + b = a :+: b
     a * Const b = Const b :*: a --Makes Things Easier if Constants go first
     a * b
-        | (((getPrec b) >= 7) && ((getPrec a) >= 7)) = a :*: b
-        | ((getPrec b) >= 7) = Parens(a) :*: (b)
-        | ((getPrec a) >= 7) = (a) :*: Parens (b)
-        | otherwise = Parens (a) :*: Parens (b)
-    a - b = (a :-: b)
+        | (getPrec b >= 7) && (getPrec a >= 7) = a :*: b
+        | getPrec b >= 7 = Parens a :*: b
+        | getPrec a >= 7 = a  :*: Parens b
+        | otherwise = Parens a :*: Parens b
+    a - b = a :-: b
     negate (Const a) = Const ( -1 * a)
-    negate (a) = Const (-1) * a
+    negate (Const (-1) :*: a) = a
+    negate (a :*: Const (-1)) = a
+    negate a = Const (-1) * a
     abs (Const a) = Const (abs a)
     abs (a :*: Const (-1)) = a
+    abs (Const (-1) :*: a) = a
     abs a = Abs a
     signum (Const a) = Const (signum a)
     signum a = Sign a
     fromInteger a = Const (fromInteger a)
 instance (Fractional m, Eq m) => Fractional (Expr m) where
     a / b
-        | (((getPrec b) >= 7) && ((getPrec a) >= 7)) = a :/: b
-        | ((getPrec b) >= 7) = Parens(a) :/: (b)
-        | ((getPrec a) >= 7) = (a) :/: Parens (b)
-        | otherwise = Parens (a) :/: Parens (b)
+        | (getPrec b >= 7) && (getPrec a >= 7) = a :/: b
+        | getPrec b >= 7 = Parens a :/: b
+        | getPrec a >= 7 = a :/: Parens b
+        | otherwise = Parens a :/: Parens b
     fromRational a = Const(fromRational a)
 instance (Floating m, Eq m) => Floating (Expr m) where
     pi = Const pi
-    exp = Exp 
-    log = Log  
-    sin = Sin 
-    cos = Cos 
+    exp = Exp
+    log = Log
+    sin = Sin
+    cos = Cos
     tan = Tan
-    asin = Asin 
-    acos = Acos 
+    asin = Asin
+    acos = Acos
     atan = Atan
-    sinh = Sinh 
-    cosh = Cosh 
-    tanh = Tanh 
-    asinh = Asinh 
-    acosh = Acosh 
-    atanh = Atanh 
+    sinh = Sinh
+    cosh = Cosh
+    tanh = Tanh
+    asinh = Asinh
+    acosh = Acosh
+    atanh = Atanh
     sqrt = Sqrt
     a ** b
-        | (((getPrec b) >= 8) && ((getPrec a) >= 8)) = a :^: b
-        | ((getPrec b) >= 8) = Parens(a) :^: (b)
-        | ((getPrec a) >= 8) = (a) :^: Parens (b)
-        | otherwise = Parens (a) :^: Parens (b)
+        | (getPrec b >= 8) && (getPrec a >= 8) = a :^: b
+        | getPrec b >= 8 = Parens a :^: b
+        | getPrec a >= 8 = a :^: Parens b
+        | otherwise = Parens a :^: Parens b
 
 -- Get the precedence of the outermost expression of a given operation
-getPrec :: (Num a) => Expr a1 -> a
+getPrec :: Expr a -> Integer
 getPrec (_ :+: _) = 5
 getPrec (_ :-: _) = 5
 getPrec (_ :*: _) = 7
@@ -188,9 +191,9 @@ getPrec _ = 10
 evalExpr :: (Floating a) => Expr a -> a -> a
 evalExpr (Const a) _ = a
 evalExpr (Var _)   c = c
-evalExpr (a :+: b) c = evalExpr a c + evalExpr b c 
-evalExpr (a :-: b) c = evalExpr a c - evalExpr b c 
-evalExpr (a :*: b) c = evalExpr a c * evalExpr b c 
+evalExpr (a :+: b) c = evalExpr a c + evalExpr b c
+evalExpr (a :-: b) c = evalExpr a c - evalExpr b c
+evalExpr (a :*: b) c = evalExpr a c * evalExpr b c
 evalExpr (a :/: b) c = evalExpr a c / evalExpr b c
 evalExpr (a :^: b) c = evalExpr a c ** evalExpr b c
 evalExpr (Parens a) c = evalExpr a c

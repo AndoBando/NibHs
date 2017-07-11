@@ -34,4 +34,4 @@ acsch :: Floating a => a -> a
 acsch x = asinh (1 / x)
 
 acoth :: Floating a => a -> a
-acoth x = atanh (1 / x) 
+acoth x = atanh (1 / x)
