@@ -57,7 +57,6 @@ simplify (a :^: Const 1)               = simplify a
 simplify (_ :^: Const 0)               = Const 1
 simplify (a :/: Const 1) = simplify (a)
 simplify (_ :/: Const 0) = error "Jeeze Man, Watch Out! You're Dividing By A Zero!"
-
 simplify ((a :*: b) :/: (c :*: d)) | a == c = simplify (b :/: d)
                                    | a == d = simplify (b :/: c)
                                    | b == c = simplify (a :/: d)
@@ -67,18 +66,21 @@ simplify ((a :/: b) :*: (c :/: d)) | a == c = simplify (b :*: d)
                                    | b == c = simplify (a :*: d)
                                    | b == d = simplify (a :*: c)
 
+simplify(a :-: b) |
+  a == b = Const 0
 
 
 simplify ( a :/: b)   | a == b = Const 1 -- only when a == b
-simplify ( a :*: b)   | a == b = a ** Const 2 -- only when a == b
+simplify ( a :*: b)   | a == b = a :^: Const 2 -- only when a == b
+simplify (a :*: b :^: c) | a == b = b :^: (c :+: Const 1)
 simplify ( a :*: (b :/: c))  | b == c = a -- only when a == b
                              | a == c = b
                              | otherwise = simplify (a :*: b) :/: simplify (c)
-simplify ( (a :*: b) :/: c)  | b == c = a -- only when a == b
-                             | a == c = b
-                             | otherwise = simplify (a :*: b) :/: simplify (b)
-simplify ( a :/: b :/: c)    | a == b = c
-                             | b == c = a
+-- simplify ( (a :*: b) :/: c)  | b == c = a -- only when a == b
+--                              | a == c = b
+--                              | otherwise = simplify (a :*: b) :/: simplify (b)
+-- simplify ( a :/: b :/: c)    | a == b = c
+--                              | b == c = a
 
 -- Some Rules!
 simplify (Const a :*: (Const b :*: expr)) = (Const $ a*b) :*: (simplify expr)
