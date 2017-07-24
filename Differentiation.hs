@@ -132,34 +132,47 @@ derivative _ _              = error "unsupported operation"
 deriv :: (Eq a, Floating a) => Expr a -> Expr a -> Expr a
 deriv = (simp .) . (. simp) . derivative
 
-pderiv :: (Eq a, Floating a) => Expr a -> [Expr a]
-pderiv expr = (map ($ expr) (map deriv (vars expr)))
+diff :: (Eq a, Floating a) => Expr a -> [Expr a]
+diff expr = map (($ expr) . deriv) (vars expr)
 
-pderivs :: (Eq a, Floating a) => Expr a -> [(Expr a, Expr a)]
-pderivs expr = zip (vars expr) (map ($ expr) (map deriv (vars expr)))
+difflab :: (Eq a, Floating a) => Expr a -> [(Expr a, Expr a)]
+difflab expr = zip (vars expr) (map (($ expr) . deriv) (vars expr))
 
-diff :: (Eq a, Floating a) => Expr a -> [a] -> [a]
-diff expr loc = map ($ loc) $ map ($ vars expr) $ map eval $ pderiv $ expr
+grad :: (Eq a, Floating a) => Expr a -> [a] -> [a]
+grad expr loc = map (($ loc).($ vars expr) . eval) $ diff expr
 
-grad expr loc = sqrt . sum $ map (**2) (diff expr loc)
---ddx :: (Eq a, Floating a) => (Expr a -> Expr a) -> a -> a
---ddx f = evalExpr' ( deriv . f $ Var "x") (Var "x")
-
--- derivs :: (Floating a, Eq a) => Expr a -> [Expr a]
--- derivs = iterate deriv
-
---ddxs :: (Floating a, Eq a) => (Expr a1 -> Expr a) -> [a -> a]
---ddxs f = fmap evalExpr ((derivs . f) $ Var "x")
-
--- --Taylor Series!!!!!
--- taylorCoeff :: (Floating b, Eq b) => (Expr b -> Expr b) -> b -> [b]
--- taylorCoeff f a = ddxs f <*> [a]
-
--- macLaurinCoeff :: (Floating b, Eq b) => (Expr b -> Expr b) -> [b]
--- macLaurinCoeff f = ddxs f <*> [0]β = Var "β"
+ddx' :: (Eq a, Floating a) => (Expr a -> Expr a) -> a -> Expr a
+ddx' f = replaceVar (deriv (Var "x") (f $ Var "x")) (Var "x")
 
 
+ddx :: (Eq a, Floating a) => (Expr a -> Expr a) -> a -> a
+ddx f x = computeExpr ( ddx' f x)
+
+derivs :: (Floating a, Eq a) => Expr a -> Expr a -> [Expr a]
+derivs var = iterate (deriv var)
+
+ddxs' :: (Floating a, Eq a) => (Expr a -> Expr a) -> a -> [Expr a]
+ddxs' f x = map (($ x) . (`replaceVar` (Var "x"))) (derivs  (Var "x") (f $ Var "x"))
+
+ddxs :: (Floating a, Eq a) => (Expr a -> Expr a) -> a -> [a]
+ddxs f x = map computeExpr (ddxs' f x)
+
+--Taylor Series!!!!!
+taylorCoeff :: (Floating b, Eq b) => (Expr b -> Expr b) -> b -> [b]
+taylorCoeff = ddxs
+
+macLaurinCoeff :: (Floating b, Eq b) => (Expr b -> Expr b) -> [b]
+macLaurinCoeff f = ddxs f 0
+
+-- Variables
 α = Var "α"
 β = Var "β"
 γ = Var "γ"
 δ = Var "δ"
+ε = Var "ε"
+ζ = Var "ζ"
+η = Var "η"
+
+--Maximise
+increase expr step = (zipWith (+)) <*> (map (step *) . grad expr)
+maximize expr step iter = (!! iter) . iterate (increase expr step)

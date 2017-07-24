@@ -96,6 +96,7 @@ instance ( Show m, Num m, Eq m) => Show (Expr m) where
     show (Const a)
         | otherwise     = show a
     show (Var a)     = a
+    show (Const a :*: Const b) = show (a * b)
     show (Const a :*: b)
         | a == (-1) = "-" ++ show(b)
         | otherwise = show(a) ++ show(b)
@@ -198,11 +199,12 @@ getPrec (_ :^: _) = 8
 getPrec _ = 10
 
 infixr 5 +|+
+(+|+) :: Eq a => [a] -> [a] -> [a]
 (+|+) a b = nub(a ++ b)
 
 vars :: (Num a, Eq a) => Expr a -> [Expr a]
 vars (Var a) = [Var a]
-vars (Const a) = []
+vars (Const _) = []
 vars (a :+: b) = vars a +|+ vars b
 vars (a :-: b) = vars a +|+ vars b
 vars (a :*: b) = vars a +|+ vars b

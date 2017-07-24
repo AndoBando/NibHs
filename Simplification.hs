@@ -66,7 +66,7 @@ simplify ((a :/: b) :*: (c :/: d)) | a == c = simplify (b :*: d)
                                    | b == c = simplify (a :*: d)
                                    | b == d = simplify (a :*: c)
 
-simplify(a :-: b) |
+simplify (a :-: b) |
   a == b = Const 0
 
 
