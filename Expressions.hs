@@ -93,16 +93,15 @@ instance (Eq m,Num m) => Eq ( Expr m) where
 instance ( Show m, Num m, Eq m) => Show (Expr m) where
     --Standard Mode
     {--}
-    show (Const a)
-        | otherwise     = show a
+    show (Const a) = show a
     show (Var a)     = a
     show (Const a :*: Const b) = show (a * b)
     show (Const a :*: b)
-        | a == (-1) = "-" ++ show(b)
-        | otherwise = show(a) ++ show(b)
+        | a == (-1) = "-" ++ show b
+        | otherwise = show a ++ show b
     show (b :*: Const a)
-        | a == (-1) = "-" ++ show(b)
-        | otherwise = show(a) ++ show(b)
+        | a == (-1) = "-" ++ show b
+        | otherwise = show a ++ show b
     show (a :+: b)   = show a ++ " + " ++ show b
     show (a :*: b)   = show a ++ " * " ++ show b
     show (a :-: b)   = show a ++ " - " ++ show b

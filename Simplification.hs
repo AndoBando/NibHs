@@ -39,23 +39,23 @@ simplify (Asech (Const a))  = Const (asech a)
 simplify (Acsch (Const a))  = Const (acsch a)
 simplify (Acoth (Const a))  = Const (acoth a)
 -- Distributive Rule
-simplify (a :*: Parens (b :+: c)) = (a :*: ( b)) :+: (a :*: (c))
-simplify (a :*: Parens (b :-: c)) = ( a :*: (b)) :-: ( a :*: (c))
-simplify (Parens (b :+: c) :*: a) = (a :*: (b)) :+: (a :*: (c))
-simplify (Parens (b :-: c) :*: a) = ( a :*: (b)) :-: ( a :*: (c))
+simplify (a :*: Parens (b :+: c)) = (a :*: b) :+: (a :*: c)
+simplify (a :*: Parens (b :-: c)) = ( a :*: b) :-: ( a :*: c)
+simplify (Parens (b :+: c) :*: a) = (a :*: b) :+: (a :*: c)
+simplify (Parens (b :-: c) :*: a) = ( a :*: b) :-: ( a :*: c)
 -- Values That Can be simplified away!
-simplify (a :+: Const 0) = simplify (a)
-simplify (Const 0 :+: a) = simplify (a)
-simplify (a :-: Const 0) = simplify (a)
-simplify (Const 0 :-: a) = simplify (negate (a))
-simplify (Const 1 :*: a) = simplify (a)
-simplify (a :*: Const 1) = simplify (a)
+simplify (a :+: Const 0) = simplify a
+simplify (Const 0 :+: a) = simplify a
+simplify (a :-: Const 0) = simplify a
+simplify (Const 0 :-: a) = simplify (negate a)
+simplify (Const 1 :*: a) = simplify a
+simplify (a :*: Const 1) = simplify a
 simplify (_ :*: Const 0) = Const 0
 simplify (Const 0 :*: _) = Const 0
 simplify (Const 0 :/: _) = Const 0
 simplify (a :^: Const 1)               = simplify a
 simplify (_ :^: Const 0)               = Const 1
-simplify (a :/: Const 1) = simplify (a)
+simplify (a :/: Const 1) = simplify a
 simplify (_ :/: Const 0) = error "Jeeze Man, Watch Out! You're Dividing By A Zero!"
 simplify ((a :*: b) :/: (c :*: d)) | a == c = simplify (b :/: d)
                                    | a == d = simplify (b :/: c)
@@ -75,7 +75,7 @@ simplify ( a :*: b)   | a == b = a :^: Const 2 -- only when a == b
 simplify (a :*: b :^: c) | a == b = b :^: (c :+: Const 1)
 simplify ( a :*: (b :/: c))  | b == c = a -- only when a == b
                              | a == c = b
-                             | otherwise = simplify (a :*: b) :/: simplify (c)
+                             | otherwise = simplify (a :*: b) :/: simplify c
 -- simplify ( (a :*: b) :/: c)  | b == c = a -- only when a == b
 --                              | a == c = b
 --                              | otherwise = simplify (a :*: b) :/: simplify (b)
@@ -83,34 +83,34 @@ simplify ( a :*: (b :/: c))  | b == c = a -- only when a == b
 --                              | b == c = a
 
 -- Some Rules!
-simplify (Const a :*: (Const b :*: expr)) = (Const $ a*b) :*: (simplify expr)
-simplify (Const a :*: expr :*: Const b)   = (Const $ a*b) :*: (simplify expr)
-simplify (expr :*: Const a :*: Const b)   = (Const $ a*b) :*: (simplify expr)
+simplify (Const a :*: (Const b :*: expr)) = (Const $ a * b) :*: simplify expr
+simplify (Const a :*: expr :*: Const b)   = (Const $ a * b) :*: simplify expr
+simplify (expr :*: Const a :*: Const b)   = (Const $ a * b) :*: simplify expr
 ---- Learing Exp and Logs
 simplify ( Exp (a :+: b))       = Exp ( simplify a) :*: Exp (simplify b)
 simplify (Log  (a :^: Const b)) = Const b :*: Log (simplify a)
 simplify (Log  (a :*: b))       = Log ( simplify a) :+: Log( simplify b)
 simplify (Log  (a :/: b))       = Log ( simplify a) :-: Log( simplify b)
-simplify (Exp (Log(a)))          = simplify a
-simplify (Exp (Log(a) :*: b))    = simplify a :^: simplify b
+simplify (Exp (Log a))          = simplify a
+simplify (Exp (Log a :*: b))    = simplify a :^: simplify b
 -- Square Roots
 simplify (Sqrt (a :^: Const 2)) = Abs a
-simplify ((Sqrt a) :^: Const 2) = a
+simplify (Sqrt a :^: Const 2) = a
 simplify (Abs a :/: b) | a == b = Sign a
 simplify (a :/: Sign b) | a == b = Sign a
 --Trig Stuff
-simplify (a :/: Sin b) = simplify (a) :*: Csc (simplify b)
-simplify (a :/: Cos b) = simplify (a) :*: Sec (simplify b)
-simplify (a :/: Tan b) = simplify (a) :*: Cot (simplify b)
-simplify (a :/: Sinh b) = simplify (a) :*: Csch (simplify b)
-simplify (a :/: Cosh b) = simplify (a) :*: Sech (simplify b)
-simplify (a :/: Tanh b) = simplify (a) :*: Coth (simplify b)
-simplify (a :/: Csc b) = simplify (a) :*: Sin (simplify b)
-simplify (a :/: Sec b) = simplify (a) :*: Cos (simplify b)
-simplify (a :/: Cot b) = simplify (a) :*: Tan (simplify b)
-simplify (a :/: Csch b) = simplify (a) :*: Sinh (simplify b)
-simplify (a :/: Sech b) = simplify (a) :*: Cosh (simplify b)
-simplify (a :/: Coth b) = simplify (a) :*: Tanh (simplify b)
+simplify (a :/: Sin b) = simplify a :*: Csc (simplify b)
+simplify (a :/: Cos b) = simplify a :*: Sec (simplify b)
+simplify (a :/: Tan b) = simplify a :*: Cot (simplify b)
+simplify (a :/: Sinh b) = simplify a :*: Csch (simplify b)
+simplify (a :/: Cosh b) = simplify a :*: Sech (simplify b)
+simplify (a :/: Tanh b) = simplify a :*: Coth (simplify b)
+simplify (a :/: Csc b) = simplify a :*: Sin (simplify b)
+simplify (a :/: Sec b) = simplify a :*: Cos (simplify b)
+simplify (a :/: Cot b) = simplify a :*: Tan (simplify b)
+simplify (a :/: Csch b) = simplify a :*: Sinh (simplify b)
+simplify (a :/: Sech b) = simplify a :*: Cosh (simplify b)
+simplify (a :/: Coth b) = simplify a :*: Tanh (simplify b)
 simplify ( Asin (Const a :/: b)) = Acsc (Const a :*: simplify b)
 simplify ( Acos (Const a :/: b)) = Asec (Const a :*: simplify b)
 simplify ( Atan (Const a :/: b)) = Acot (Const a :*: simplify b)
@@ -124,39 +124,39 @@ simplify ( Asech (Const a :/: b)) = Acosh (Const a :*: simplify b)
 simplify ( Acsch (Const a :/: b)) = Asinh (Const a :*: simplify b)
 simplify ( Acoth (Const a :/: b)) = Atanh (Const a :*: simplify b)
 simplify ((Sin a :^: Const 2) :+: (Cos b :^: Const 2)) | a == b = Const 1
-simplify (Const 1 :-: (Cos a :^: Const 2)) = (Sin a :^: Const 2)
-simplify (Const 1 :-: (Sin a :^: Const 2)) = (Cos a :^: Const 2)
+simplify (Const 1 :-: (Cos a :^: Const 2)) = Sin a :^: Const 2
+simplify (Const 1 :-: (Sin a :^: Const 2)) = Cos a :^: Const 2
 -- Basics!
 simplify (Parens a :+: Parens b)
-        | (((getPrec b) >= 4) && ((getPrec a) >= 4)) = simplify a :+: simplify b
-        | ((getPrec b) >= 4) = Parens(simplify a) :+: (simplify b)
-        | ((getPrec a) >= 4) = (simplify a) :+: Parens (simplify b)
+        | getPrec b >= 4 && (getPrec a >= 4) = simplify a :+: simplify b
+        | getPrec b >= 4 = Parens (simplify a) :+: simplify b
+        | getPrec a >= 4 = simplify a :+: Parens (simplify b)
         | otherwise = Parens ( simplify a) :+: Parens (simplify b)
 simplify (Parens a :-: Parens b)
-        | (((getPrec b) >= 5) && ((getPrec a) >= 5)) = simplify a :-: simplify b
-        | ((getPrec b) >= 5) = Parens(simplify a) :-: (simplify b)
-        | ((getPrec a) >= 5) = (simplify a) :-: Parens (simplify b)
+        | getPrec b >= 5 && getPrec a >= 5 = simplify a :-: simplify b
+        | getPrec b >= 5 = Parens (simplify a) :-: simplify b
+        | getPrec a >= 5 = simplify a :-: Parens (simplify b)
         | otherwise = Parens ( simplify a) :-: Parens (simplify b)
 simplify (Parens a :*: Parens b)
-        | (((getPrec b) >= 6) && ((getPrec a) >= 6)) = simplify a :*: simplify b
-        | ((getPrec b) >= 6) = Parens(simplify a) :*: (simplify b)
-        | ((getPrec a) >= 6) = (simplify a) :*: Parens (simplify b)
+        | getPrec b >= 6 && getPrec a >= 6 = simplify a :*: simplify b
+        | getPrec b >= 6 = Parens (simplify a) :*: simplify b
+        | getPrec a >= 6 = simplify a :*: Parens (simplify b)
         | otherwise = Parens ( simplify a) :*: Parens (simplify b)
 simplify (Parens a :/: Parens b)
-        | (((getPrec b) >= 7) && ((getPrec a) >= 7)) = simplify a :/: simplify b
-        | ((getPrec b) >= 7) = Parens(simplify a) :/: (simplify b)
-        | ((getPrec a) >= 7) = (simplify a) :/: Parens (simplify b)
+        | getPrec b >= 7 && getPrec a >= 7 = simplify a :/: simplify b
+        | getPrec b >= 7 = Parens (simplify a) :/: simplify b
+        | getPrec a >= 7 = simplify a :/: Parens (simplify b)
         | otherwise = Parens ( simplify a) :/: Parens (simplify b)
 simplify (Parens a :^: Parens b)
-        | (((getPrec b) >= 8) && ((getPrec a) >= 8)) = simplify a :^: simplify b
-        | ((getPrec b) >= 8) = Parens(simplify a) :^: (simplify b)
-        | ((getPrec a) >= 8) = (simplify a) :^: Parens (simplify b)
+        | getPrec b >= 8 && getPrec a >= 8 = simplify a :^: simplify b
+        | getPrec b >= 8 = Parens (simplify a) :^: simplify b
+        | getPrec a >= 8 = simplify a :^: Parens (simplify b)
         | otherwise = Parens ( simplify a) :^: Parens (simplify b)
-simplify (a :+: b) = simplify (a) :+: simplify (b)
-simplify (a :-: b) = simplify (a) :-: simplify (b)
-simplify (a :*: b) = simplify (a) :*: simplify (b)
-simplify (a :/: b) = simplify (a) :/: simplify (b)
-simplify (a :^: b) = simplify (a) :^: simplify (b)
+simplify (a :+: b) = simplify a :+: simplify b
+simplify (a :-: b) = simplify a :-: simplify b
+simplify (a :*: b) = simplify a :*: simplify b
+simplify (a :/: b) = simplify a :/: simplify b
+simplify (a :^: b) = simplify a :^: simplify b
 -- Peeling Functions Away
 simplify (Parens a) = Parens (simplify a)
 simplify (Sqrt a) = Sqrt (simplify a)
@@ -183,7 +183,7 @@ simplify (Atanh a)  = Atanh (simplify a)
 simplify (Asech a)  = Asech (simplify a)
 simplify (Acsch a)  = Acsch (simplify a)
 simplify (Acoth a)  = Acoth (simplify a)
-simplify (a) = id a
+simplify a = a
 -- Repeat simplification untill it stops changing
 fullSimplify :: (Floating a, Eq a) => Expr a -> Expr a
 fullSimplify expr = fullSimplify' expr (Const 0) -- placeholder

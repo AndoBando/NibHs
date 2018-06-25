@@ -26,7 +26,7 @@ derivative v (a :/: b)
     | v `varIn` a && v `varIn` b = (derivative v a * b - derivative v b * a) / b ** Const 2
     | v `varIn` a = derivative v a / b
     | v `varIn` b = Const (-1) * (a * derivative v b) / b ** Const 2
-    | otherwise = (a / b)
+    | otherwise = a / b
 -- Power Rule
 derivative v (a :^: Const x)
     | v `varIn` a = Const x * a ** Const (x-1) * derivative v a
@@ -41,7 +41,7 @@ derivative v (Exp a)
 derivative v (a :^: b )
     | v `varIn` a && v `varIn` b = derivative v (Exp ( Log a * b))
     | v `varIn` a = b * derivative v a * a ** (b - Const 1)
-    | v `varIn` b = Log (a) * derivative v b * a ** b
+    | v `varIn` b = Log a * derivative v b * a ** b
 --Square Roots
 derivative v (Sqrt a)
     | v `varIn` a = derivative v a / (Const 2 * Sqrt a)
@@ -152,7 +152,7 @@ derivs :: (Floating a, Eq a) => Expr a -> Expr a -> [Expr a]
 derivs var = iterate (deriv var)
 
 ddxs' :: (Floating a, Eq a) => (Expr a -> Expr a) -> a -> [Expr a]
-ddxs' f x = map (($ x) . (`replaceVar` (Var "x"))) (derivs  (Var "x") (f $ Var "x"))
+ddxs' f x = map (($ x) . (`replaceVar` Var "x")) (derivs  (Var "x") (f $ Var "x"))
 
 ddxs :: (Floating a, Eq a) => (Expr a -> Expr a) -> a -> [a]
 ddxs f x = map computeExpr (ddxs' f x)
@@ -174,5 +174,5 @@ macLaurinCoeff f = ddxs f 0
 η = Var "η"
 
 --Maximise
-increase expr step = (zipWith (+)) <*> (map (step *) . grad expr)
+increase expr step = zipWith (+) <*> (map (step *) . grad expr)
 maximize expr step iter = (!! iter) . iterate (increase expr step)
